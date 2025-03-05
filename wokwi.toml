@@ -1,5 +1,5 @@
 [wokwi]
 version = 1
 gdbServerPort = 3333
-elf = "target/riscv32imac-unknown-none-elf/debug/bevy-c6"
-firmware = "target/riscv32imac-unknown-none-elf/debug/bevy-c6"
+elf = "target/riscv32imac-unknown-none-elf/release/bevy-c6"
+firmware = "target/riscv32imac-unknown-none-elf/release/bevy-c6"

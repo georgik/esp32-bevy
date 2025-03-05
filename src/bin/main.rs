@@ -9,6 +9,7 @@ use log::info;
 
 // Import the no_std–compatible Bevy parts.
 use bevy_math::Vec3;
+use bevy_color::Color;
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
@@ -38,6 +39,8 @@ async fn main(_spawner: Spawner) {
     // Demonstrate bevy_math usage.
     demo_bevy_math();
 
+    demo_bevy_color();
+
     // Main async loop.
     loop {
         info!("Main loop running...");
@@ -45,6 +48,17 @@ async fn main(_spawner: Spawner) {
     }
 }
 
+
+fn demo_bevy_color() {
+    // Create a color with 10% red, 50% green, 90% blue using sRGB.
+    let color = Color::srgb(0.1, 0.5, 0.9);
+    // Convert the color into Srgba (which holds red, green, blue, and alpha fields).
+    let srgba = color.to_srgba();
+    info!(
+        "bevy_color: R: {:.2}, G: {:.2}, B: {:.2}, A: {:.2}",
+        srgba.red, srgba.green, srgba.blue, srgba.alpha
+    );
+}
 
 /// Uses bevy_math to create two 3D vectors and compute their dot product.
 fn demo_bevy_math() {
