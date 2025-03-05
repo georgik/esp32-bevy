@@ -12,16 +12,64 @@ use bevy_color::Color;
 use bevy_math::Vec3;
 use bevy_ecs::prelude::*;
 
-// Define a simple component for the ECS demo.
+/// A component for the position on a 10x10 grid.
 #[derive(Component)]
-struct Counter(u32);
+struct Position {
+    x: i32,
+    y: i32,
+}
 
-// A simple ECS system that increments all `Counter` components.
-fn increment_system(mut query: Query<&mut Counter>) {
-    for mut counter in query.iter_mut() {
-        counter.0 += 1;
-        info!("ECS: Counter incremented to: {}", counter.0);
+/// A component for the velocity (movement per tick).
+#[derive(Component)]
+struct Velocity {
+    vx: i32,
+    vy: i32,
+}
+
+/// The movement system: update position based on velocity and bounce off grid edges.
+fn movement_system(mut query: Query<(&mut Position, &mut Velocity)>) {
+    for (mut pos, mut vel) in query.iter_mut() {
+        pos.x += vel.vx;
+        pos.y += vel.vy;
+
+        // Bounce off the horizontal boundaries.
+        if pos.x < 0 {
+            pos.x = 0;
+            vel.vx = -vel.vx;
+        } else if pos.x >= 10 {
+            pos.x = 9;
+            vel.vx = -vel.vx;
+        }
+
+        // Bounce off the vertical boundaries.
+        if pos.y < 0 {
+            pos.y = 0;
+            vel.vy = -vel.vy;
+        } else if pos.y >= 10 {
+            pos.y = 9;
+            vel.vy = -vel.vy;
+        }
+        info!("Movement: new position: ({}, {})", pos.x, pos.y);
     }
+}
+
+/// The display system: build and print a 10×10 grid with an 'O' at the current position.
+fn display_system(query: Query<&Position>) {
+    // Create a grid of 10 rows × 10 columns, filled with dots.
+    let mut grid = [[b'.'; 10]; 10];
+    // For each entity with a Position, mark its location with 'O'.
+    for pos in query.iter() {
+        if pos.x >= 0 && pos.x < 10 && pos.y >= 0 && pos.y < 10 {
+            grid[pos.y as usize][pos.x as usize] = b'O';
+        }
+    }
+    // Print the grid line by line.
+    for row in grid.iter() {
+        if let Ok(s) = core::str::from_utf8(row) {
+            info!("{}", s);
+        }
+    }
+    info!("----------");
 }
 
 #[panic_handler]
@@ -33,10 +81,10 @@ extern crate alloc;
 
 #[esp_hal_embassy::main]
 async fn main(_spawner: Spawner) {
-    // Initialize logging.
+    // Initialize the logger.
     esp_println::logger::init_logger_from_env();
 
-    // Setup ESP-hal configuration.
+    // Set up the ESP-hal configuration.
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
@@ -49,35 +97,32 @@ async fn main(_spawner: Spawner) {
 
     info!("Embassy initialized!");
 
-    // Demonstrate bevy_color usage.
+    // Optionally, demonstrate bevy_color and bevy_math.
     demo_bevy_color();
-
-    // Demonstrate bevy_math usage.
     demo_bevy_math();
 
-    // Set up a simple ECS world and schedule.
+    // Set up the ECS world.
     let mut world = World::default();
-    // Use spawn_empty() to create an entity without an initial bundle, then insert the component.
-    world.spawn_empty().insert(Counter(0));
+    // Spawn an entity with a Position and Velocity.
+    world.spawn_empty()
+        .insert(Position { x: 0, y: 0 })
+        .insert(Velocity { vx: 1, vy: 1 });
 
-    // Create a schedule and add the system.
+    // Create a schedule and add our ECS systems.
     let mut schedule = Schedule::default();
-    schedule.add_systems(increment_system);
+    schedule.add_systems(movement_system);
+    schedule.add_systems(display_system);
 
-    // Main async loop.
+    // Main loop: run the ECS schedule each second.
     loop {
-        info!("Main loop running...");
-        // Run the ECS schedule.
         schedule.run(&mut world);
         Timer::after(Duration::from_secs(1)).await;
     }
 }
 
-/// Creates a color using bevy_color and logs its sRGBA components.
+/// Demonstrates bevy_color by creating an sRGB color and logging its sRGBA components.
 fn demo_bevy_color() {
-    // Create a color with 10% red, 50% green, 90% blue using sRGB.
     let color = Color::srgb(0.1, 0.5, 0.9);
-    // Convert the color into its sRGBA representation.
     let srgba = color.to_srgba();
     info!(
         "bevy_color: R: {:.2}, G: {:.2}, B: {:.2}, A: {:.2}",
@@ -85,7 +130,7 @@ fn demo_bevy_color() {
     );
 }
 
-/// Uses bevy_math to create two 3D vectors and compute their dot product.
+/// Demonstrates bevy_math by computing the dot product of two 3D vectors.
 fn demo_bevy_math() {
     let a = Vec3::new(1.0, 2.0, 3.0);
     let b = Vec3::new(4.0, 5.0, 6.0);
