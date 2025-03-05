@@ -7,9 +7,22 @@ use esp_hal::clock::CpuClock;
 use esp_hal::timer::systimer::SystemTimer;
 use log::info;
 
-// Import the no_std–compatible Bevy parts.
-use bevy_math::Vec3;
+// Import no_std–compatible Bevy parts.
 use bevy_color::Color;
+use bevy_math::Vec3;
+use bevy_ecs::prelude::*;
+
+// Define a simple component for the ECS demo.
+#[derive(Component)]
+struct Counter(u32);
+
+// A simple ECS system that increments all `Counter` components.
+fn increment_system(mut query: Query<&mut Counter>) {
+    for mut counter in query.iter_mut() {
+        counter.0 += 1;
+        info!("ECS: Counter incremented to: {}", counter.0);
+    }
+}
 
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
@@ -23,7 +36,7 @@ async fn main(_spawner: Spawner) {
     // Initialize logging.
     esp_println::logger::init_logger_from_env();
 
-    // Set up ESP-hal configuration.
+    // Setup ESP-hal configuration.
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
@@ -36,23 +49,35 @@ async fn main(_spawner: Spawner) {
 
     info!("Embassy initialized!");
 
+    // Demonstrate bevy_color usage.
+    demo_bevy_color();
+
     // Demonstrate bevy_math usage.
     demo_bevy_math();
 
-    demo_bevy_color();
+    // Set up a simple ECS world and schedule.
+    let mut world = World::default();
+    // Use spawn_empty() to create an entity without an initial bundle, then insert the component.
+    world.spawn_empty().insert(Counter(0));
+
+    // Create a schedule and add the system.
+    let mut schedule = Schedule::default();
+    schedule.add_systems(increment_system);
 
     // Main async loop.
     loop {
         info!("Main loop running...");
+        // Run the ECS schedule.
+        schedule.run(&mut world);
         Timer::after(Duration::from_secs(1)).await;
     }
 }
 
-
+/// Creates a color using bevy_color and logs its sRGBA components.
 fn demo_bevy_color() {
     // Create a color with 10% red, 50% green, 90% blue using sRGB.
     let color = Color::srgb(0.1, 0.5, 0.9);
-    // Convert the color into Srgba (which holds red, green, blue, and alpha fields).
+    // Convert the color into its sRGBA representation.
     let srgba = color.to_srgba();
     info!(
         "bevy_color: R: {:.2}, G: {:.2}, B: {:.2}, A: {:.2}",
@@ -62,10 +87,8 @@ fn demo_bevy_color() {
 
 /// Uses bevy_math to create two 3D vectors and compute their dot product.
 fn demo_bevy_math() {
-    // Create two vectors.
     let a = Vec3::new(1.0, 2.0, 3.0);
     let b = Vec3::new(4.0, 5.0, 6.0);
-    // Compute the dot product.
     let dot = a.dot(b);
     info!("bevy_math: Dot product of a and b: {}", dot);
 }

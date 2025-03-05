@@ -21,6 +21,7 @@ static_cell      = { version = "2.1.0", features = ["nightly"] }
 #bevy_app = { version = "0.15.3", default-features = false, features = ["bevy_reflect"] }
 bevy_color = { git = "https://github.com/bevyengine/bevy.git", default-features = false }
 bevy_math = { git = "https://github.com/bevyengine/bevy.git", default-features = false, features = ["libm"]}
+bevy_ecs = { git = "https://github.com/bevyengine/bevy.git", default-features = false }
 #bevy_ecs = { version = "0.15", default-features = false, features = ["no_std"] }
 #bevy_utils = { version = "0.15", default-features = false, features = ["no_std"] }
 #bevy_tasks = { version = "0.15", default-features = false, features = ["no_std"] }
