@@ -19,12 +19,14 @@ log              = { version = "0.4.21" }
 static_cell      = { version = "2.1.0", features = ["nightly"] }
 
 #bevy_app = { version = "0.15.3", default-features = false, features = ["bevy_reflect"] }
-# bevy_color = { git = "https://github.com/bevyengine/bevy.git", default-features = false }
+bevy_color = { git = "https://github.com/bevyengine/bevy.git", default-features = false }
+bevy_math = { git = "https://github.com/bevyengine/bevy.git", default-features = false, features = ["libm"]}
 #bevy_ecs = { version = "0.15", default-features = false, features = ["no_std"] }
 #bevy_utils = { version = "0.15", default-features = false, features = ["no_std"] }
 #bevy_tasks = { version = "0.15", default-features = false, features = ["no_std"] }
 
-glam = { version = "0.30.0", default-features = false, features = ["scalar-math", "libm"] }
+glam = { version = "0.29.2", default-features = false, features = ["scalar-math", "libm"] }
+libm = { version = "0.2.11", default-features = false }
 
 # [patch.crates-io]
 # glam = { git = "https://github.com/yourusername/glam.git", branch = "scalar-math" }
